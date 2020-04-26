@@ -69,7 +69,7 @@ def generate_pt_cloud(v1, v2, v3, n):
 
 
 # Load mesh from STL file
-my_mesh = mesh.Mesh.from_file('Arm_Assembly2.STL')
+my_mesh = mesh.Mesh.from_file('Arm_Part_3.STL')
 size = 3
 numpoints = 5000
 
