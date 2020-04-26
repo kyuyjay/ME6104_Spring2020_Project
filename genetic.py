@@ -9,7 +9,7 @@ import vis
 
 class genetic:
     # Main driver class to hold algorithm parameters
-    def __init__(self,params,pointcloud,cutoff=600,pop=10,elite=0.2,mutate=0.3):
+    def __init__(self,params,pointcloud,cutoff=600,pop=100,elite=0.2,mutate=0.3):
         self.mating_pool = []
         self.weights = []
         self.cutoff = cutoff

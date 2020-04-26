@@ -128,3 +128,4 @@ def convert(filename):
 
     # Return pointcloud
     return result_xyz
+
