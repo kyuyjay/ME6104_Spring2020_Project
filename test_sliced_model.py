@@ -3,8 +3,6 @@ from math import comb
 from stl import mesh
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
-from sklearn.neighbors import NearestNeighbors
-import networkx as nx
 
 
 def set_axes_equal(ax):
@@ -87,37 +85,58 @@ def getneighbors(vec, low, high):
     return np.where(np.logical_and(vec >= low, vec <= high))
 
 
-def get_nearest_neighbors(ycoords, zcoords):
-    """ Return indices of points inside local bin
+def orientation(p, q, r):
+    val = (q[1] - p[1])*(r[0] - q[0]) - (q[0] - p[0])*(r[1] - q[1])
+    if val == 0:
+        return 0
+    elif val > 0:
+        return 1
+    else:
+        return 2
 
-        Found this algorithm online somewhere
 
-        Inputs:
-            ycoords: vector of y coordinates
-            zcoords: vector of z coordinates
-
-        Outputs:
-            ordered yz pairs in nearest neighbor configuration
-    """
-    points = np.c_[ycoords, zcoords]
-    clf = NearestNeighbors(n_neighbors=3, algorithm='ball_tree').fit(points)
-    g = clf.kneighbors_graph()
-    t = nx.from_scipy_sparse_matrix(g)
-    paths = [list(nx.dfs_preorder_nodes(t, ind)) for ind in range(len(points))]
-    mindist = np.inf
-    minidx = 0
-    for ind in range(len(points)):
-        p = paths[ind]         # order of nodes
-        ordered = points[p]    # ordered nodes
-        # find cost of that order by the sum of euclidean distances between points (i) and (i+1)
-        cost = (((ordered[:-1] - ordered[1:])**2).sum(1)).sum()
-        if cost < mindist:
-            mindist = cost
-            minidx = ind
-    opt_order = paths[minidx]
-    yy = ycoords[opt_order]
-    zz = zcoords[opt_order]
-    return yy, zz
+def convex_hull(pts):
+    n = pts.shape[0]
+    if n < 3:
+        return np.empty([1, 2])
+    # Find leftmost point in set of points
+    pt_l = 0
+    for i in range(1, pts.shape[0]):
+        if pts[i, 0] < pts[pt_l, 0]:
+            pt_l = i
+    '''
+    Start from leftmost point, keep moving counterclockwise until reach the start point 
+    again. This loop runs O(h) times where h is number of points in result or output.
+    '''
+    vertex = pts[pt_l, :]
+    pt_p = pt_l
+    count = 1
+    while True:
+        # Add current point to result
+        if count == 1:
+            hull = vertex
+        else:
+            hull = np.append(hull, pts[pt_p, :], axis=0)
+        # print('Hull ' + str(count) + ':\n')
+        # print(hull)
+        '''
+        Search for a point 'q' such that  
+        orientation(p, x, q) is counterclockwise  
+        for all points 'x'. The idea is to keep  
+        track of last visited most counterclock- 
+        wise point in q. If any point 'i' is more  
+        counterclock-wise than q, then update q.
+        '''
+        pt_q = (pt_p + 1) % n
+        for i in range(0, n):
+            # If i is more counterclockwise than current q, then update q
+            if orientation(pts[pt_p, :], pts[i, :], pts[pt_q, :]) == 2:
+                pt_q = i
+        pt_p = pt_q
+        count += 1
+        if pt_p == pt_l:
+            break
+    return np.reshape(hull, (-1, 2))
 
 
 def bernstein_poly(uval, k, n):
@@ -176,6 +195,10 @@ slc, dx = np.linspace(xmin, xmax, num=25, retstep=True)
 fig3 = plt.figure()
 ax3 = mplot3d.Axes3D(fig3)
 
+# Create figure to visualize bezier curve for each slice
+fig4 = plt.figure()
+ax4 = mplot3d.Axes3D(fig4)
+
 # Iterate through slices
 for i in range(len(slc)):
     # Extract x coordinate of current slice
@@ -196,20 +219,35 @@ for i in range(len(slc)):
     x_points = np.ones(len(pt_idx[0])) * xcoord
     y_points = result[pt_idx[0], 1]
     z_points = result[pt_idx[0], 2]
-    # Plot current '2D' scatter
+    # Plot current '2D' scatter on each plot
     ax3.scatter(x_points, y_points, z_points, c='k', marker='o', s=1)
-    # Arrange points in nearest-neighbor configuration
-    y_cp, z_cp = get_nearest_neighbors(y_points, z_points)
-    x_cp = np.ones(y_cp.shape[0]) * xcoord
+    ax4.scatter(x_points, y_points, z_points, c='k', marker='o', s=1)
+    # Construct Convex Hull of Current Slice
+    pnts = np.append(y_points, z_points)
+    pnts = np.reshape(pnts, (-1, 2), order='F')
+    current_hull = convex_hull(pnts)
+    x_cp = np.ones(current_hull.shape[0]) * xcoord
+    y_cp = current_hull[:, 0]
+    z_cp = current_hull[:, 1]
+    # Plot lines connecting (now) organized points
+    ax3.plot3D(x_cp, y_cp, z_cp)
     # Construct Control Points
     c_p = np.vstack((x_cp, y_cp, z_cp))
     # Construct Bezier Curve
-    bez_curve = bezier_curve(c_p, 20)
+    bez_curve = bezier_curve(c_p, 1000)
     # Plot Bezier Curve
-    ax3.plot3D(bez_curve[0, :], bez_curve[1, :], bez_curve[2, :])
+    ax4.plot3D(bez_curve[0, :], bez_curve[1, :], bez_curve[2, :])
 
 set_axes_equal(ax3)
+ax3.set_zlim(0, 200)
 ax3.set_xlabel('x')
 ax3.set_ylabel('y')
 ax3.set_zlabel('z')
+plt.show()
+
+set_axes_equal(ax3)
+ax4.set_zlim(0, 200)
+ax4.set_xlabel('x')
+ax4.set_ylabel('y')
+ax4.set_zlabel('z')
 plt.show()
