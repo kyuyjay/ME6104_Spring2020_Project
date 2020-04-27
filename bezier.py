@@ -10,9 +10,9 @@ def gen_points(N, pointcloud):
     for i in range(N):
         for j in range(N):
             point = random.choice(pointcloud)
-            point[0] = point[0] + random.uniform(-5,5)
-            point[1] = point[1] + random.uniform(-5,5)
-            point[2] = point[2] + random.uniform(-5,5)
+            # point[0] = point[0] + random.uniform(-5,5)
+            # point[1] = point[1] + random.uniform(-5,5)
+            # point[2] = point[2] + random.uniform(-5,5)
             points[0,i*N + j] = point[0]
             points[1,i*N + j] = point[1]
             points[2,i*N + j] = point[2]
