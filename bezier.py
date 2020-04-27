@@ -1,7 +1,6 @@
 import sys
 import random
 import numpy as np
-
 from math import comb
 
 # Generate N x N number of control points from existing pointcloud points
@@ -44,7 +43,7 @@ def sort_cp(N,cp):
 
 # Calculate Bernstein coefficient
 def bernstein_poly(u, k, n):
-    poly = comb(n,k) * (u**k) * (1-u)**(n-k)
+    poly = comb(n, k) * (u ** k) * (1 - u) ** (n - k)
     return poly
 
 # Construct a bezier point given u and v parameters and N x N control points
@@ -53,8 +52,7 @@ def bezier_point(cp, u, v):
     point = np.zeros(3)
     for i in range(N):
         for j in range(N):
-            point[0] = point[0] + (bernstein_poly(u, i, N) * bernstein_poly(v, j, N) * cp[0,i,j])
-            point[1] = point[1] + (bernstein_poly(u, i, N) * bernstein_poly(v, j, N) * cp[1,i,j])
-            point[2] = point[2] + (bernstein_poly(u, i, N) * bernstein_poly(v, j, N) * cp[2,i,j])
+            point[0] = point[0] + (bernstein_poly(u, i, N) * bernstein_poly(v, j, N) * cp[0, i, j])
+            point[1] = point[1] + (bernstein_poly(u, i, N) * bernstein_poly(v, j, N) * cp[1, i, j])
+            point[2] = point[2] + (bernstein_poly(u, i, N) * bernstein_poly(v, j, N) * cp[2, i, j])
     return point
-

@@ -7,6 +7,7 @@ import pandas as pd
 import bezier as bz
 import vis
 
+
 class genetic:
     # Main driver class to hold algorithm parameters
     def __init__(self,pointcloud,N,cutoff=600,gen=10000,pop=500,elite=0.2,mutate=0.2):

@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.special import comb
 
+
 # Generate num number of discrete points
 def gen_mesh(num):
     u = np.empty(num)
@@ -14,28 +15,32 @@ def gen_mesh(num):
         u[i] = i * (1 / (num - 1))
     return u
 
+
 # Generate Bernstein coefficients for a set of discrete points for one k
 def bernstein_poly(u, k, n):
     poly = np.empty(np.size(u))
     for i, j in enumerate(u):
-        poly[i] = comb(n,k) * (j**k) * (1-j)**(n-k)
+        poly[i] = comb(n, k) * (j ** k) * (1 - j) ** (n - k)
     return poly
+
 
 # Determine surface using num_u * num_v set of discrete points and cp control points
 def bezier_surface(cpp, num_u, num_v):
     u = gen_mesh(num_u)
     v = gen_mesh(num_v)
-    dim = np.size(cpp,0)
-    n_u = np.size(cpp,1)
-    n_v = np.size(cpp,2)
+    dim = np.size(cpp, 0)
+    n_u = np.size(cpp, 1)
+    n_v = np.size(cpp, 2)
     n = n_u * n_v
-    poly = np.zeros((dim,num_u,num_v))
+    poly = np.zeros((dim, num_u, num_v))
     for coord in range(dim):
         for i in range(n_u):
             for j in range(n_v):
                 # Degree of polynomial one less than number of control points
-                poly[coord] = poly[coord] + np.outer(bernstein_poly(u, i, n_u-1),bernstein_poly(v, j, n_v-1)) * cpp[coord][i][j]
+                poly[coord] = poly[coord] + np.outer(bernstein_poly(u, i, n_u - 1), bernstein_poly(v, j, n_v - 1)) * \
+                              cpp[coord][i][j]
     return poly
+
 
 # Add surface to figure
 def plot(cpp, num_u=100, num_v=100):
