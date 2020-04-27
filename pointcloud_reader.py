@@ -71,7 +71,7 @@ def convert(filename):
     # Load mesh from STL file
     my_mesh = mesh.Mesh.from_file(filename)
     size = 3
-    numpoints = 100
+    numpoints = 200
 
     # Get XYZ coordinates of all vertices and delete duplicate (shared) vertices
     v_with_dupes = np.vstack((my_mesh.v0, my_mesh.v1, my_mesh.v2))
