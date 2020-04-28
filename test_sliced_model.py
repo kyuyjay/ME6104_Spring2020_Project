@@ -177,77 +177,80 @@ def bezier_curve(cp, num_plot_points):
         curve[a, :] = coordinate
     return curve
 
+def convert(filename, N):
+    # Load first STL model from file
+    my_mesh = mesh.Mesh.from_file(filename)
+    numpoints = N
+    result = generate_pt_cloud(my_mesh.v0, my_mesh.v1, my_mesh.v2, numpoints)
 
-# Load first STL model from file
-my_mesh = mesh.Mesh.from_file('Arm_NoHand.stl')
-numpoints = 1000
-result = generate_pt_cloud(my_mesh.v0, my_mesh.v1, my_mesh.v2, numpoints)
+    # Find min and max values along x-axis
+    result = result[np.lexsort((result[:, 2], result[:, 1], result[:, 0]))]
+    xmin = np.min(result[:, 0])
+    xmax = np.max(result[:, 0])
 
-# Find min and max values along x-axis
-result = result[np.lexsort((result[:, 2], result[:, 1], result[:, 0]))]
-xmin = np.min(result[:, 0])
-xmax = np.max(result[:, 0])
+    # Create vector of x coordinates of slices along model
+    slc, dx = np.linspace(xmin, xmax, num=25, retstep=True)
 
-# Create vector of x coordinates of slices along model
-slc, dx = np.linspace(xmin, xmax, num=25, retstep=True)
+    # Create figure to visualize 'sliced' model
+    fig3 = plt.figure()
+    ax3 = mplot3d.Axes3D(fig3)
 
-# Create figure to visualize 'sliced' model
-fig3 = plt.figure()
-ax3 = mplot3d.Axes3D(fig3)
+    # Create figure to visualize bezier curve for each slice
+    # fig4 = plt.figure()
+    # ax4 = mplot3d.Axes3D(fig4)
 
-# Create figure to visualize bezier curve for each slice
-fig4 = plt.figure()
-ax4 = mplot3d.Axes3D(fig4)
+    results = []
+    # Iterate through slices
+    for i in range(len(slc)):
+        # Extract x coordinate of current slice
+        xcoord = slc[i]
+        # Bin point cloud data within a distance from current x coordinate
+        if i == 0:
+            lbound = xcoord
+            ubound = xcoord + dx/2
+        elif i == len(slc):
+            lbound = xcoord - dx/2
+            ubound = xcoord
+        else:
+            lbound = xcoord - dx/2
+            ubound = xcoord + dx/2
+        # Get indices of points inside current bin
+        pt_idx = getneighbors(result[:, 0], lbound, ubound)
+        # Project 5 points onto YZ plane at current x coordinate
+        x_points = np.ones(len(pt_idx[0])) * xcoord
+        y_points = result[pt_idx[0], 1]
+        z_points = result[pt_idx[0], 2]
+        # Plot current '2D' scatter on each plot
+        ax3.scatter(x_points, y_points, z_points, c='k', marker='o', s=1)
+        # ax4.scatter(x_points, y_points, z_points, c='k', marker='o', s=1)
+        # Construct Convex Hull of Current Slice
+        pnts = np.append(y_points, z_points)
+        pnts = np.reshape(pnts, (-1, 2), order='F')
+        current_hull = convex_hull(pnts)
+        x_cp = np.ones(current_hull.shape[0]) * xcoord
+        y_cp = current_hull[:, 0]
+        z_cp = current_hull[:, 1]
+        results.extend(zip(x_cp, y_cp, z_cp))
+        # Plot lines connecting (now) organized points
+        ax3.plot3D(x_cp, y_cp, z_cp)
+        # Construct Control Points
+        #c_p = np.vstack((x_cp, y_cp, z_cp))
+        # Construct Bezier Curve
+        #bez_curve = bezier_curve(c_p, 1000)
+        # Plot Bezier Curve
+        #ax4.plot3D(bez_curve[0, :], bez_curve[1, :], bez_curve[2, :])
 
-# Iterate through slices
-for i in range(len(slc)):
-    # Extract x coordinate of current slice
-    xcoord = slc[i]
-    # Bin point cloud data within a distance from current x coordinate
-    if i == 0:
-        lbound = xcoord
-        ubound = xcoord + dx/2
-    elif i == len(slc):
-        lbound = xcoord - dx/2
-        ubound = xcoord
-    else:
-        lbound = xcoord - dx/2
-        ubound = xcoord + dx/2
-    # Get indices of points inside current bin
-    pt_idx = getneighbors(result[:, 0], lbound, ubound)
-    # Project 5 points onto YZ plane at current x coordinate
-    x_points = np.ones(len(pt_idx[0])) * xcoord
-    y_points = result[pt_idx[0], 1]
-    z_points = result[pt_idx[0], 2]
-    # Plot current '2D' scatter on each plot
-    ax3.scatter(x_points, y_points, z_points, c='k', marker='o', s=1)
-    ax4.scatter(x_points, y_points, z_points, c='k', marker='o', s=1)
-    # Construct Convex Hull of Current Slice
-    pnts = np.append(y_points, z_points)
-    pnts = np.reshape(pnts, (-1, 2), order='F')
-    current_hull = convex_hull(pnts)
-    x_cp = np.ones(current_hull.shape[0]) * xcoord
-    y_cp = current_hull[:, 0]
-    z_cp = current_hull[:, 1]
-    # Plot lines connecting (now) organized points
-    ax3.plot3D(x_cp, y_cp, z_cp)
-    # Construct Control Points
-    c_p = np.vstack((x_cp, y_cp, z_cp))
-    # Construct Bezier Curve
-    bez_curve = bezier_curve(c_p, 1000)
-    # Plot Bezier Curve
-    ax4.plot3D(bez_curve[0, :], bez_curve[1, :], bez_curve[2, :])
+    set_axes_equal(ax3)
+    ax3.set_xlabel('x')
+    ax3.set_ylabel('y')
+    ax3.set_zlabel('z')
 
-set_axes_equal(ax3)
-ax3.set_zlim(0, 200)
-ax3.set_xlabel('x')
-ax3.set_ylabel('y')
-ax3.set_zlabel('z')
-plt.show()
+    #set_axes_equal(ax3)
+    #ax4.set_zlim(0, 200)
+    #ax4.set_xlabel('x')
+    #ax4.set_ylabel('y')
+    #ax4.set_zlabel('z')
+    #plt.show()
+    print(results)
 
-set_axes_equal(ax3)
-ax4.set_zlim(0, 200)
-ax4.set_xlabel('x')
-ax4.set_ylabel('y')
-ax4.set_zlabel('z')
-plt.show()
+    return result

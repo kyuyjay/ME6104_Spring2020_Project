@@ -20,7 +20,15 @@ def gen_points(N, pointcloud):
     for i in range(N):
         row = points[:,i*N:(i+1)*N]
         row = row[:,np.argsort(row[1,:])]
-        cp[:,i,:] = row
+        mean_z = np.average(row[2,:])
+        latter = row[:, row[2,:] <= mean_z]
+        row = row[:, row[2,:] > mean_z]
+        n_row = np.zeros((3,N))
+        n_row[0] = np.append(row[0], np.flip(latter[0]))
+        n_row[1] = np.append(row[1], np.flip(latter[1]))
+        n_row[2] = np.append(row[2], np.flip(latter[2]))
+        n_row[:,-1] = n_row[:,0]
+        cp[:,i,:] = n_row
     return cp
 
 # Generate a control point from existing pointcloud point
@@ -38,7 +46,15 @@ def sort_cp(N,cp):
     for i in range(N):
         row = points[:,i*N:(i+1)*N]
         row = row[:,np.argsort(row[1,:])]
-        cp[:,i,:] = row
+        mean_z = np.average(row[2,:])
+        latter = row[:, row[2,:] <= mean_z]
+        row = row[:, row[2,:] > mean_z]
+        n_row = np.zeros((3,N))
+        n_row[0] = np.append(row[0], np.flip(latter[0]))
+        n_row[1] = np.append(row[1], np.flip(latter[1]))
+        n_row[2] = np.append(row[2], np.flip(latter[2]))
+        n_row[:,-1] = n_row[:,0]
+        cp[:,i,:] = n_row
     return cp
 
 # Calculate Bernstein coefficient
