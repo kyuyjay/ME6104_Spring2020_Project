@@ -1,3 +1,7 @@
+# ME6104 Computer-Aided Design Project
+#
+# Pointcloud Extraction from STL
+
 import numpy as np
 import pandas as pd
 from stl import mesh
@@ -67,7 +71,7 @@ def generate_pt_cloud(v1, v2, v3, n):
     res = (v1 * u) + (v2 * v) + (v3 * w)
     return res.astype(np.float32)
 
-
+# Main function to convert STL file into a pointcloud via mesh sampling
 def convert(filename, N):
     # Load mesh from STL file
     my_mesh = mesh.Mesh.from_file(filename)

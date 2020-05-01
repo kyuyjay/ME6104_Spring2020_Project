@@ -1,3 +1,7 @@
+# ME6104 Computer-Aided Design Project
+#
+# Genetic Algorithm
+
 import sys
 import time
 import math
@@ -24,9 +28,10 @@ class genetic:
                 "GENERATIONS": gen
                 }
         self.hyp["ELITISM"] = max(1,int(round(self.hyp["ELITIST FACTOR"] * self.hyp["POPULATION"])))
-        print("Hyperparameters")
+        #print("Hyperparameters")
         for param in self.hyp:
             print("{}: {}".format(param,self.hyp[param]))
+            # print("{}".format(self.hyp[param]), end=",", flush=True)
 
 
     # Each gene represents a control point
@@ -100,7 +105,8 @@ class genetic:
     # Mate two DNA by selecting different portions of them while preserving the validity of the solution
     def crossbreed(self,host,partner):
         N = self.hyp["N"]
-        half = math.floor(N/2)
+        half = random.randint(1,N-1)
+        # half = math.floor(N/2)
         child = self.DNA(self.hyp["N"],self.pointcloud,True)
         child.strand[:, 0:half, :] = host.strand[:, 0:half, :]
         child.strand[:, half:, :] = partner.strand[:, half:, :]
@@ -141,17 +147,19 @@ class genetic:
         curr_min = sys.maxsize
         unchanged = 0
         for i in range(self.hyp["GENERATIONS"]):
-            print("Generation " + str(i))
+            # print("Generation " + str(i))
             self.survive()
             if self.mating_pool[0].rmse < curr_min:
                 unchanged = 0
                 curr_min = self.mating_pool[0].rmse
                 best_DNA = self.mating_pool[0]
             unchanged = unchanged + 1
-            print("Best RMSE " + str(self.mating_pool[0].rmse))
+            # print("Best RMSE " + str(self.mating_pool[0].rmse))
+            print(self.mating_pool[0].rmse)
             if unchanged > 1000:
                 break
             if self.cutoff is not None:
                 if (time.time() - start_time) > self.cutoff:
                     break
+        print(self.mating_pool[0].rmse)
         return(self.mating_pool[0].strand)

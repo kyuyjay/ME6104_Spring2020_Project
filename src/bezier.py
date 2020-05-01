@@ -1,3 +1,7 @@
+# ME6104 Computer-Aided Design Project
+#
+# Bezier Functions. Generate Bezier points and population for use in genetic algorithm
+
 import sys
 import random
 import numpy as np
