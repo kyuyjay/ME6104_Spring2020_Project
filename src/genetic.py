@@ -147,15 +147,14 @@ class genetic:
         curr_min = sys.maxsize
         unchanged = 0
         for i in range(self.hyp["GENERATIONS"]):
-            # print("Generation " + str(i))
+            print("Generation " + str(i))
             self.survive()
             if self.mating_pool[0].rmse < curr_min:
                 unchanged = 0
                 curr_min = self.mating_pool[0].rmse
                 best_DNA = self.mating_pool[0]
             unchanged = unchanged + 1
-            # print("Best RMSE " + str(self.mating_pool[0].rmse))
-            print(self.mating_pool[0].rmse)
+            print("Best RMSE " + str(self.mating_pool[0].rmse))
             if unchanged > 1000:
                 break
             if self.cutoff is not None:
